@@ -13,30 +13,29 @@ function Square(props) {
     class Board extends React.Component {
         renderSquare(i) {
             return (
-                <Square 
-                value={this.props.squares[i]} 
-                onClick={() => this.props.onClick(i)}
+                <Square
+                    key = {'Square ' + i}
+                    value={this.props.squares[i]}
+                    onClick={() => this.props.onClick(i)}
                 />
             );
         }
-        render() {
+        renderSquares(n) {
+            let squares = [];
+            for (let i = n; i < n + 3; i++) {
+                squares.push(this.renderSquare(i));
+            }
+            return squares;
+        }
+        renderRows(i) {
+            return <div className='board-row'>{this.renderSquares(i)}</div>;
+        }
+        render(){
             return (
                 <div>
-                    <div className="board-row">
-                        {this.renderSquare(0)}
-                        {this.renderSquare(1)}
-                        {this.renderSquare(2)}
-                    </div>
-                    <div className="board-row">
-                        {this.renderSquare(3)}
-                        {this.renderSquare(4)}
-                        {this.renderSquare(5)}
-                    </div>
-                    <div className="board-row">
-                        {this.renderSquare(6)}
-                        {this.renderSquare(7)}
-                        {this.renderSquare(8)}
-                    </div>
+                    {this.renderRows(0)}
+                    {this.renderRows(3)}
+                    {this.renderRows(6)}
                 </div>
             );
         }
@@ -51,6 +50,7 @@ function Square(props) {
                 }],
                 stepNumber: 0,
                 xIsNext:true,
+                isDescending: true
             }
         }
 
@@ -61,7 +61,24 @@ function Square(props) {
             });
         }
 
+        sortHistory() {
+            this.setState({
+              isDescending: !this.state.isDescending
+            });
+          }
+
         handleClick(i) {
+            const locations = [
+                [' col 1', ' row 1'],
+                [' col 2', ' row 1'],
+                [' col 3', ' row 1'],
+                [' col 1', ' row 2'],
+                [' col 2', ' row 2'],
+                [' col 3', ' row 2'],
+                [' col 1', ' row 3'],
+                [' col 2', ' row 3'],
+                [' col 3', ' row 3'],
+            ]
             const history = this.state.history.slice(0, this.state.stepNumber + 1);
             const current = history[history.length - 1];
             const squares = current.squares.slice();
@@ -72,6 +89,7 @@ function Square(props) {
             this.setState({
                 history: history.concat([{
                     squares: squares,
+                    location: locations[i],
                 }]),
                 stepNumber: history.length,
                 xIsNext: !this.state.xIsNext,
@@ -85,11 +103,13 @@ function Square(props) {
 
             const moves = history.map((step, move) => {
                 const desc = move ? 
-                    'Go to the move №' + move : 
+                    'Go to the move №' + move + ' in ' + history[move].location : 
                     'Go to the game start'
                 return(
                     <li key={move}>
-                        <button onClick={() => this.jumpTo(move)}>{desc}</button>
+                        <button onClick={() => {this.jumpTo(move)}}>
+                            {move == this.state.stepNumber ? <b>{desc}</b> : desc}
+                        </button>
                     </li>
                 );
             });
@@ -104,13 +124,16 @@ function Square(props) {
                 <div className="game">
                     <div className="game-board">
                         <Board
-                        squares={current.squares}
-                        onClick={(i) => this.handleClick(i)}
+                            squares={current.squares}
+                            onClick={(i) => this.handleClick(i)}
                         />
                     </div>
                     <div className="game-info">
                         <div>{status}</div>
-                        <ol>{moves}</ol>
+                        <ol>{this.state.isDescending ? moves : moves.reverse()}</ol>
+                        <button onClick={() => this.sortHistory()}>
+                            Sort by: {this.state.isDescending ? "Descending" : "Asending"}
+                        </button>
                     </div>
                 </div>
             );
